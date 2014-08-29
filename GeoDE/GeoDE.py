@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 
-def chdir(data, sampleclass, genes, gamma=1.):
+def chdir(data, sampleclass, genes, gamma=1., sort=True):
 	"""
 	Calculate the characteristic direction for a gene expression dataset
 	
@@ -16,7 +16,7 @@ def chdir(data, sampleclass, genes, gamma=1.):
 				example: sampleclass = [1,1,1,2,2,2]
 		genes: list or numpy.array, row labels for genes 
 		gamma: float, regulaized term. A parameter that smooths the covariance matrix and reduces potential noise in the dataset
-
+		sort: bool, whether to sort the output by the absolute value of chdir
 	Output:
 		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.	
 	"""
@@ -64,7 +64,8 @@ def chdir(data, sampleclass, genes, gamma=1.):
 	b /= np.linalg.norm(b) # normalize b to unit vector
 
 	grouped = zip([abs(item) for item in b],b,genes)
-	grouped = sorted(grouped,key=lambda x: x[0], reverse=True)
+	if sort:
+		grouped = sorted(grouped,key=lambda x: x[0], reverse=True)
 
 	# return sorted b and genes.
 	res = [(item[1],item[2]) for item in grouped]
@@ -118,7 +119,6 @@ def paea(chdir, gmtline, case_sensitive=False):
 		p_val = 1.
 
 	return principal_angle, p_val
-
 
 
 def paea_wrapper(chdir, gmt_fn, case_sensitive=False):
