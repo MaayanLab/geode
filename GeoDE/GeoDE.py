@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 
-def chdir(data, sampleclass, genes, gamma=1., sort=True):
+def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nnull=10):
 	"""
 	Calculate the characteristic direction for a gene expression dataset
 	
@@ -17,6 +17,8 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True):
 		genes: list or numpy.array, row labels for genes 
 		gamma: float, regulaized term. A parameter that smooths the covariance matrix and reduces potential noise in the dataset
 		sort: bool, whether to sort the output by the absolute value of chdir
+		calculate_sig: bool, whether to calculate the significance of characteristic directions
+		nnull: int, number of null characteristic directions to calculate for significance
 	Output:
 		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.	
 	"""
@@ -32,8 +34,8 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True):
 		raise ValueError("gamma has to be a numeric number")
 	if set(sampleclass) != set([1,2]):
 		raise ValueError("sampleclass has to be a list whose elements are in only 1 or 2")
-	if m1.sum()<2 or m2.sum()<2:
-		raise ValueError("Too few samples to calculate characteristic directions")
+	# if m1.sum()<2 or m2.sum()<2:
+	# 	raise ValueError("Too few samples to calculate characteristic directions")
 	if len(genes) != data.shape[0]:
 		raise ValueError("Number of genes does not match the demension of the expression matrix")
 
@@ -55,7 +57,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True):
 	v = pca.components_[0:keepPC].T # rotated data 
 	r = pca.transform(data.T)[:,0:keepPC] # transformed data
 
-	dd = ( np.dot(r[m1].T,r[m1]) + np.dot(r[m2].T,r[m2]) ) / float(n1+n2-2)
+	dd = ( np.dot(r[m1].T,r[m1]) + np.dot(r[m2].T,r[m2]) ) / float(n1+n2-2) # covariance
 	sigma = np.mean(np.diag(dd)) # the scalar covariance
 
 	shrunkMats = np.linalg.inv(gamma*dd + sigma*(1-gamma)*np.eye(keepPC))
@@ -67,8 +69,16 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True):
 	if sort:
 		grouped = sorted(grouped,key=lambda x: x[0], reverse=True)
 
-	# return sorted b and genes.
-	res = [(item[1],item[2]) for item in grouped]
+
+	if not calculate_sig: # return sorted b and genes.
+		res = [(item[1],item[2]) for item in grouped]
+	else: # generate a null distribution of chdirs
+		nu = n1 + n2 - 2
+		y1 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull) * np.sqrt(nu / chi2.rvs(nu,size=nnull))
+		y2 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull) * np.sqrt(nu / chi2.rvs(nu,size=nnull))
+		y = y2 - y1
+		y = y.T
+
 	return res
 
 
