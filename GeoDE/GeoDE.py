@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 from sklearn.decomposition import PCA
-
+from scipy.stats import chi2
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
@@ -74,13 +74,30 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		res = [(item[1],item[2]) for item in grouped]
 	else: # generate a null distribution of chdirs
 		nu = n1 + n2 - 2
-		y1 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull) * np.sqrt(nu / chi2.rvs(nu,size=nnull))
-		y2 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull) * np.sqrt(nu / chi2.rvs(nu,size=nnull))
-		y = y2 - y1
-		y = y.T
+		y1 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull).T * np.sqrt(nu / chi2.rvs(nu,size=nnull))
+		y2 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull).T * np.sqrt(nu / chi2.rvs(nu,size=nnull))
+		y = y2 - y1 ## y is the null of v
 
+		nullchdirs = []
+		for col in y.T:
+			bn = np.dot(np.dot(np.dot(v,shrunkMats), v.T), np.dot(col,v.T))
+			bn /= np.linalg.norm(bn)
+			bn = bn ** 2
+			bn.sort()
+			bn = bn[::-1] ## sort in decending order
+			nullchdirs.append(bn)
+
+		nullchdirs = np.array(nullchdirs).T
+		nullchdirs = nullchdirs.mean(axis=1)
+		b_s = b ** 2 
+		b_s.sort()
+		b_s = b_s[::-1] # sorted b in decending order
+		relerr = b_s / nullchdirs ## relative error
+		# ratio_to_null
+		ratios = np.cumsum(relerr)/np.sum(relerr)- np.linspace(1./len(meanvec),1,len(meanvec))
+		res = [(item[1],item[2], ratio) for item, ratio in zip(grouped, ratios)] 
+		print 'Number of significant genes: %s'%(np.argmax(ratios)+1)
 	return res
-
 
 
 def paea(chdir, gmtline, case_sensitive=False):
@@ -93,6 +110,8 @@ def paea(chdir, gmtline, case_sensitive=False):
 		a list of tuples in the format of:
 			the principal angle, the p value
 	"""
+	if len(chdir[0]) == 3: ## output from which calculate_sig is enabled
+		chdir = [(item[0],item[1]) for item in chdir]
 	if not case_sensitive:
 		genes_measured = [gene.upper() for b, gene in chdir]
 		gmtline = [gene.upper() for gene in gmtline]

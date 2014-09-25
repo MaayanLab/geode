@@ -17,8 +17,9 @@ mat = np.array(mat)
 col_labels = ['1','1','1','2','2','2']
 
 ## compute characteristic direction
-chdir_res = chdir(mat, col_labels, genes)
-## perform PAEA gene-set enrichment analysis
+chdir_res = chdir(mat, col_labels, genes, calculate_sig=True, nnull=100)
+pprint(chdir_res)
+# perform PAEA gene-set enrichment analysis
 paea_res = paea_wrapper(chdir_res, 'GeneOntology_BP.gmt')
-## look at the top enriched GO terms
+# look at the top enriched GO terms
 pprint(paea_res[0:10])
