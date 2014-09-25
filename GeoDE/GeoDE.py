@@ -7,7 +7,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 
-def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nnull=10):
+def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nnull=10, sig_only=False):
 	"""
 	Calculate the characteristic direction for a gene expression dataset
 	
@@ -20,6 +20,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		sort: bool, whether to sort the output by the absolute value of chdir
 		calculate_sig: bool, whether to calculate the significance of characteristic directions
 		nnull: int, number of null characteristic directions to calculate for significance
+		sig_only: bool, whether to return only significant genes; active only when calculate_sig is True
 	Output:
 		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.	
 	"""
@@ -29,8 +30,10 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 	sampleclass = np.array(map(int, sampleclass))
 	# masks
 	m_non0 = sampleclass != 0
-	m1 = sampleclass == 1 
-	m2 = sampleclass == 2
+	m1 = sampleclass[m_non0] == 1
+	m2 = sampleclass[m_non0] == 2
+	# m1 = sampleclass == 1
+	# m2 = sampleclass == 2
 
 	if type(gamma) not in [float, int]:
 		raise ValueError("gamma has to be a numeric number")
@@ -78,6 +81,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 
 	if not calculate_sig: # return sorted b and genes.
 		res = [(item[1],item[2]) for item in grouped]
+		return res
 	else: # generate a null distribution of chdirs
 		nu = n1 + n2 - 2
 		y1 = np.random.multivariate_normal(np.zeros(keepPC), dd, nnull).T * np.sqrt(nu / chi2.rvs(nu,size=nnull))
@@ -103,7 +107,10 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		ratios = np.cumsum(relerr)/np.sum(relerr)- np.linspace(1./len(meanvec),1,len(meanvec))
 		res = [(item[1],item[2], ratio) for item, ratio in zip(grouped, ratios)] 
 		print 'Number of significant genes: %s'%(np.argmax(ratios)+1)
-	return res
+		if sig_only:
+			return res[0:np.argmax(ratios)+1]
+		else:
+			return res
 
 
 def paea(chdir, gmtline, case_sensitive=False):
