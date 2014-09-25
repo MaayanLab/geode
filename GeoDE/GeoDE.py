@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 from sklearn.decomposition import PCA
 from scipy.stats import chi2
+from scipy.stats.mstats import zscore
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
@@ -12,7 +13,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 	
 	Input:
 		data: numpy.array, is the data matrix of gene expression where rows correspond to genes and columns correspond to samples
-		sampleclass: list or numpy.array, labels of the samples, it has to be consist of 1 and 2, with 1 being control and 2 being perturbation
+		sampleclass: list or numpy.array, labels of the samples, it has to be consist of 0, 1 and 2, with 0 being columns to be excluded, 1 being control and 2 being perturbation
 				example: sampleclass = [1,1,1,2,2,2]
 		genes: list or numpy.array, row labels for genes 
 		gamma: float, regulaized term. A parameter that smooths the covariance matrix and reduces potential noise in the dataset
@@ -27,17 +28,22 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 	data.astype(float)
 	sampleclass = np.array(map(int, sampleclass))
 	# masks
+	m_non0 = sampleclass != 0
 	m1 = sampleclass == 1 
 	m2 = sampleclass == 2
 
 	if type(gamma) not in [float, int]:
 		raise ValueError("gamma has to be a numeric number")
-	if set(sampleclass) != set([1,2]):
-		raise ValueError("sampleclass has to be a list whose elements are in only 1 or 2")
-	# if m1.sum()<2 or m2.sum()<2:
-	# 	raise ValueError("Too few samples to calculate characteristic directions")
+	if set(sampleclass) != set([1,2]) and set(sampleclass) != set([0,1,2]):
+		raise ValueError("sampleclass has to be a list whose elements are in only 0, 1 or 2")
+	if m1.sum()<2 or m2.sum()<2:
+		raise ValueError("Too few samples to calculate characteristic directions")
 	if len(genes) != data.shape[0]:
 		raise ValueError("Number of genes does not match the demension of the expression matrix")
+
+	## normalize data
+	data = data[:, m_non0]
+	data = zscore(data) # standardize for each genes across samples
 
 	## start to compute
 	n1 = m1.sum() # number of controls
