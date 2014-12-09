@@ -22,7 +22,8 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		nnull: int, number of null characteristic directions to calculate for significance
 		sig_only: bool, whether to return only significant genes; active only when calculate_sig is True
 	Output:
-		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.	
+		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.
+			If calculate_sig is set to True, each tuple contains a third element which is the ratio of characteristic directions to null ChDir
 	"""
 	
 	## check input
@@ -32,15 +33,13 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 	m_non0 = sampleclass != 0
 	m1 = sampleclass[m_non0] == 1
 	m2 = sampleclass[m_non0] == 2
-	# m1 = sampleclass == 1
-	# m2 = sampleclass == 2
 
 	if type(gamma) not in [float, int]:
 		raise ValueError("gamma has to be a numeric number")
 	if set(sampleclass) != set([1,2]) and set(sampleclass) != set([0,1,2]):
 		raise ValueError("sampleclass has to be a list whose elements are in only 0, 1 or 2")
-	if m1.sum()<2 or m2.sum()<2:
-		raise ValueError("Too few samples to calculate characteristic directions")
+	# if m1.sum()<2 or m2.sum()<2:
+	# 	raise ValueError("Too few samples to calculate characteristic directions")
 	if len(genes) != data.shape[0]:
 		raise ValueError("Number of genes does not match the demension of the expression matrix")
 
@@ -155,7 +154,8 @@ def paea(chdir, gmtline, case_sensitive=False):
 		pac = lambda theta: 2.*(1./np.sqrt(2*np.pi))*np.exp((n/2.)*np.log(n/(n - m))+(m/2.)*np.log((n - m)/m)+(1/2.)*np.log(m/(2.*n)*(n - m))+(n-m-1)*np.log(np.sin(theta))+(m-1)*np.log(np.cos(theta)))
 		integration_range = np.linspace(0, theta, num=10000, endpoint=True) ## num seems to matter a lot
 		p_val = np.trapz(pac(integration_range), integration_range)
-		
+		if p_val > 1.:
+			p_val = 1.
 	else:
 		principal_angle = 0.
 		p_val = 1.
@@ -163,7 +163,7 @@ def paea(chdir, gmtline, case_sensitive=False):
 	return principal_angle, p_val
 
 
-def paea_wrapper(chdir, gmt_fn, case_sensitive=False):
+def paea_wrapper(chdir, gmt_fn, case_sensitive=False, sort=True):
 	"""
 	A wrapper function for PAEA gene-set enrichment analysis
 
@@ -185,9 +185,13 @@ def paea_wrapper(chdir, gmt_fn, case_sensitive=False):
 			sl = line.strip().split('\t')
 			term = sl[0]
 			genes = sl[2:]
+			if ',' in genes[0]: ## auto detect fuzzy gmts
+				genes = [gene.split(',')[0] for gene in genes]
 			principal_angle, p_val = paea(chdir, genes, case_sensitive=case_sensitive)
 			res.append( (term, p_val) )
-	## sort terms based on p values in ascending order
-	res = sorted(res, key=lambda x:x[1])
+	if sort:## sort terms based on p values in ascending order
+		res = sorted(res, key=lambda x:x[1])
+	else: ## if not sort, return unsorted p_vals only
+		res = [p_val for term, p_val in res ]
 	return res
 
