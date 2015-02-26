@@ -7,7 +7,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 
-def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nnull=10, sig_only=False):
+def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nnull=10, sig_only=False, norm_vector=True):
 	"""
 	Calculate the characteristic direction for a gene expression dataset
 	
@@ -21,6 +21,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		calculate_sig: bool, whether to calculate the significance of characteristic directions
 		nnull: int, number of null characteristic directions to calculate for significance
 		sig_only: bool, whether to return only significant genes; active only when calculate_sig is True
+		norm_vector: bool, whether to return a characteristic direction vector normalized to unit vector
 	Output:
 		A list of tuples sorted by the absolute value in descending order characteristic directions of genes.
 			If calculate_sig is set to True, each tuple contains a third element which is the ratio of characteristic directions to null ChDir
@@ -71,7 +72,8 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 	shrunkMats = np.linalg.inv(gamma*dd + sigma*(1-gamma)*np.eye(keepPC))
 
 	b = np.dot(np.dot(np.dot(v,shrunkMats), v.T), meanvec)
-	b /= np.linalg.norm(b) # normalize b to unit vector
+	if norm_vector:
+		b /= np.linalg.norm(b) # normalize b to unit vector
 
 	grouped = zip([abs(item) for item in b],b,genes)
 	if sort:
