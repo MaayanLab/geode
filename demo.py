@@ -1,4 +1,4 @@
-from GeoDE import *
+from geode import *
 import numpy as np
 from pprint import pprint
 
@@ -17,7 +17,7 @@ mat = np.array(mat)
 col_labels = ['1','1','1','2','2','2']
 
 ## compute characteristic direction
-chdir_res = chdir(mat, col_labels, genes, calculate_sig=True, nnull=100)
+chdir_res = chdir(mat, col_labels, genes, calculate_sig=0, nnull=100)
 pprint(chdir_res)
 # perform PAEA gene-set enrichment analysis
 paea_res = paea_wrapper(chdir_res, 'GeneOntology_BP.gmt')
