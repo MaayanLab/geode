@@ -1,1 +1,1 @@
-from GeoDE import *
+from .geode import *
