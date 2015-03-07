@@ -71,7 +71,8 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 
 	shrunkMats = np.linalg.inv(gamma*dd + sigma*(1-gamma)*np.eye(keepPC))
 
-	b = np.dot(np.dot(np.dot(v,shrunkMats), v.T), meanvec)
+	b = np.dot(v, np.dot(np.dot(v.T, meanvec), shrunkMats))
+
 	if norm_vector:
 		b /= np.linalg.norm(b) # normalize b to unit vector
 
