@@ -3,6 +3,13 @@ GeoDEpy
 
 A Python implementation of the R package GeoDE (http://cran.r-project.org/web/packages/GeoDE/index.html)
 
+Installation
+----
+
+```
+$ pip install git+git://github.com/Maayanlab/geode.git
+```
+
 Introduction
 ----
 A geometrical Approach to Differential expression and gene-set enrichment.
