@@ -108,7 +108,7 @@ def chdir(data, sampleclass, genes, gamma=1., sort=True, calculate_sig=False, nn
 		# ratio_to_null
 		ratios = np.cumsum(relerr)/np.sum(relerr)- np.linspace(1./len(meanvec),1,len(meanvec))
 		res = [(item[1],item[2], ratio) for item, ratio in zip(grouped, ratios)] 
-		print 'Number of significant genes: %s'%(np.argmax(ratios)+1)
+		print('Number of significant genes: %s'%(np.argmax(ratios)+1))
 		if sig_only:
 			return res[0:np.argmax(ratios)+1]
 		else:
