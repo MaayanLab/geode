@@ -11,7 +11,7 @@ with open (os.path.join(os.path.dirname(__file__), 'example_expression_data.txt'
 	for line in f:
 		sl = line.strip().split('\t')
 		gene = sl[0]
-		row = map(float, sl[1:])
+		row = list(map(float, sl[1:]))
 		genes.append(gene)
 		mat.append(row)
 mat = np.array(mat)

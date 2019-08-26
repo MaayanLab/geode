@@ -12,7 +12,7 @@ class TestChdir(unittest.TestCase):
 			for line in f:
 				sl = line.strip().split('\t')
 				gene = sl[0]
-				row = map(float, sl[1:])
+				row = list(map(float, sl[1:]))
 				genes.append(gene)
 				mat.append(row)
 
