@@ -1,3 +1,4 @@
+import os.path
 import unittest
 import numpy as np
 import geode
@@ -6,7 +7,7 @@ class TestChdir(unittest.TestCase):
 	def setUp(self): # to get example data
 		mat = []
 		genes = []
-		with open ('../examples/example_expression_data.txt') as f:
+		with open (os.path.join(os.path.dirname(__file__), '../examples/example_expression_data.txt')) as f:
 			next(f)
 			for line in f:
 				sl = line.strip().split('\t')
