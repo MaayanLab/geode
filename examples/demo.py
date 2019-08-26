@@ -1,16 +1,17 @@
 from geode import *
-import numpy as np
 from pprint import pprint
+import numpy as np
+import os.path
 
 ## read expression data
 mat = []
 genes = []
-with open ('example_expression_data.txt') as f:
+with open (os.path.join(os.path.dirname(__file__), 'example_expression_data.txt')) as f:
 	next(f)
 	for line in f:
 		sl = line.strip().split('\t')
 		gene = sl[0]
-		row = map(float, sl[1:])
+		row = list(map(float, sl[1:]))
 		genes.append(gene)
 		mat.append(row)
 mat = np.array(mat)
