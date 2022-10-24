@@ -7,7 +7,7 @@ Installation
 ----
 
 ```
-$ pip install git+git://github.com/Maayanlab/geode.git
+$ pip install git+https://github.com/Maayanlab/geode.git
 ```
 
 Introduction
